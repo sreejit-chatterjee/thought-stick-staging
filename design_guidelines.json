@@ -1,0 +1,116 @@
+{
+  "identity": {
+    "name": "E1",
+    "persona": "Anti-AI Creative Designer",
+    "vibe": "Tactile, Messy, Emotional, Human",
+    "principles": [
+      "Imperfection is feature",
+      "Digital textures over flat colors",
+      "Physics over static layouts",
+      "Nostalgia (Scrapbook/Collage) aesthetics"
+    ]
+  },
+  "technical_stack": {
+    "framework": "React",
+    "styling": "Tailwind CSS",
+    "animation": "Framer Motion",
+    "gestures": "react-use-gesture",
+    "icons": "Lucide React (for UI controls), Inline SVGs (for doodles)",
+    "storage": "localStorage",
+    "voice": "Web Speech API (webkitSpeechRecognition)"
+  },
+  "design_system": {
+    "typography": {
+      "primary_font": "Caveat",
+      "secondary_font": "Patrick Hand",
+      "ui_font": "Nunito",
+      "google_fonts_import": "https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Patrick+Hand&family=Nunito:wght@400;600;700&display=swap",
+      "rules": [
+        "Use 'Caveat' for all user-generated notes and main headings.",
+        "Use 'Patrick Hand' for shorter labels or buttons.",
+        "Use 'Nunito' ONLY for small UI elements/tooltips where legibility is critical.",
+        "CRITICAL: NEVER use Inter, Roboto, or System Sans."
+      ]
+    },
+    "colors": {
+      "palette": {
+        "board_bg": "#FDFBF7",
+        "note_butter": "#F9E07B",
+        "note_grass": "#7BC47F",
+        "note_mint": "#98E8C1",
+        "note_sky": "#87CEEB",
+        "ink_primary": "#2D2D2D",
+        "ink_secondary": "#5A5A5A",
+        "alert_red": "#E06C75",
+        "accent_doodle": "#4A4A4A"
+      },
+      "shadows": {
+        "note_lift": "2px 4px 12px rgba(0,0,0,0.15), 0 1px 2px rgba(0,0,0,0.2)",
+        "note_floating": "10px 20px 30px rgba(0,0,0,0.2)"
+      },
+      "gradients": "FORBIDDEN. Do not use gradients. Use solid colors or textures."
+    },
+    "assets": {
+      "textures": {
+        "paper_overlay": "https://images.pexels.com/photos/220634/pexels-photo-220634.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+      },
+      "doodles": {
+        "star_svg": "M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z",
+        "tape_svg": "Polygon shapes with jagged edges to simulate torn tape",
+        "spiral_svg": "Hand-drawn stroke paths"
+      }
+    }
+  },
+  "components": {
+    "Board": {
+      "description": "Infinite or large fixed canvas. Background must be 'board_bg' with the 'paper_overlay' blended (multiply/opacity).",
+      "behavior": "Drop zone for notes. Click empty space to focus.",
+      "styles": "min-h-screen w-full relative overflow-hidden cursor-crosshair bg-[#FDFBF7]"
+    },
+    "StickyNote": {
+      "description": "Draggable, rotatable, throwable card.",
+      "interactions": [
+        "Drag: Follows cursor, scales up slightly (1.05), shadow deepens.",
+        "Throw: On release, calculate velocity. Animate 'x/y' to new position based on velocity vector.",
+        "Z-Index: Bring to front on drag start."
+      ],
+      "visuals": "Random rotation (-5deg to 5deg). Hand-drawn border radius (approx 2px-255px random? No, just 'rounded-sm' but maybe CSS clip-path for rough edges if possible, otherwise standard rounded-md is acceptable if rotated).",
+      "content": "Text flows naturally. Font size adjusts based on text length (clamp)."
+    },
+    "Composer": {
+      "description": "Floating panel or bottom bar to create new notes.",
+      "input_methods": ["Keyboard (Textarea)", "Voice (Microphone Icon)"],
+      "visuals": "Looks like a torn piece of paper or a sketchbook page. NOT a modal dialog."
+    },
+    "VoiceInput": {
+      "description": "Microphone button.",
+      "states": {
+        "idle": "Outline icon.",
+        "listening": "Pulsing red/orange animation. Real-time transcript preview."
+      }
+    }
+  },
+  "implementation_rules": {
+    "physics": {
+      "engine": "react-use-gesture + framer-motion",
+      "logic": "Use 'useDrag' hook. On 'down: false' (release), read 'velocity' and 'direction'. Calculate landing position: current + (velocity * 200). Update state."
+    },
+    "storage": {
+      "key": "sticky-notes-data",
+      "schema": "[{ id: string, text: string, x: number, y: number, rotation: number, color: string, zIndex: number, createdAt: number }]"
+    },
+    "accessibility": {
+      "reduced_motion": "Disable fling physics if prefers-reduced-motion is true.",
+      "contrast": "Ensure text is #2D2D2D on pastel backgrounds (Passes AAA)."
+    }
+  },
+  "universal_guidelines": [
+    "NO PURPLE. NO GRADIENTS.",
+    "Do not use generic 'clean' SaaS shadows. Use distinct, directional shadows.",
+    "Avoid symmetry. Randomize rotations of notes.",
+    "Make it feel 'sticky' - dragging should feel like peeling it off.",
+    "Use 'sonner' for notifications (e.g., 'Note deleted').",
+    "Keep UI controls minimal. The content (notes) is the hero.",
+    "Add a 'crumpled paper' texture overlay to the entire .App container with mix-blend-mode: multiply and low opacity (10-20%)."
+  ]
+}
