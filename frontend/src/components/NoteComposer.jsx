@@ -4,10 +4,10 @@ import { Mic, MicOff, Send, X } from 'lucide-react';
 import { useVoice } from '../hooks/useVoice';
 
 const COLORS = [
-  { id: 'butter', value: '#F9E07B', label: 'Butter yellow' },
-  { id: 'grass', value: '#7BC47F', label: 'Grass green' },
-  { id: 'mint', value: '#98E8C1', label: 'Mint green' },
-  { id: 'sky', value: '#87CEEB', label: 'Sky blue' },
+  { id: 'butter', value: '#F9E07B', label: 'Butter' },
+  { id: 'grass', value: '#7BC47F', label: 'Grass' },
+  { id: 'mint', value: '#98E8C1', label: 'Mint' },
+  { id: 'sky', value: '#87CEEB', label: 'Sky' },
 ];
 
 export default function NoteComposer({ onThrow, onClose }) {
@@ -16,17 +16,12 @@ export default function NoteComposer({ onThrow, onClose }) {
   const [isVoiceMode, setIsVoiceMode] = useState(false);
   const textareaRef = useRef(null);
 
-  const {
-    isListening, transcript, isSupported,
-    startListening, stopListening, clearTranscript,
-  } = useVoice();
+  const { isListening, transcript, isSupported, startListening, stopListening, clearTranscript } = useVoice();
 
-  // Sync live transcript to textarea
   useEffect(() => {
     if (transcript) setText(transcript);
   }, [transcript]);
 
-  // Stop listening on unmount
   useEffect(() => () => { try { stopListening(); } catch (e) {} }, [stopListening]);
 
   const handleMicToggle = () => {
@@ -38,13 +33,7 @@ export default function NoteComposer({ onThrow, onClose }) {
       setText('');
       setIsVoiceMode(true);
       startListening();
-      setTimeout(() => textareaRef.current?.focus(), 100);
     }
-  };
-
-  const handleTextChange = (e) => {
-    setText(e.target.value);
-    if (!isListening) setIsVoiceMode(false);
   };
 
   const handleThrow = () => {
@@ -58,77 +47,98 @@ export default function NoteComposer({ onThrow, onClose }) {
   };
 
   return (
-    <motion.div
-      className="composer"
-      data-testid="note-composer"
-      initial={{ y: 120, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      exit={{ y: 120, opacity: 0 }}
-      transition={{ type: 'spring', damping: 22, stiffness: 220 }}
-    >
-      {/* Voice active indicator */}
-      {isListening && (
-        <div className="voice-indicator" data-testid="voice-indicator">
-          <span className="voice-dot" />
-          <span>Listening… speak your idea</span>
-        </div>
-      )}
-
-      <textarea
-        ref={textareaRef}
-        className="composer-textarea"
-        placeholder={isListening ? 'Say your idea...' : "What's on your mind?"}
-        value={text}
-        onChange={handleTextChange}
-        onKeyDown={handleKeyDown}
-        autoFocus={!isListening}
-        rows={3}
-        data-testid="composer-textarea"
+    <>
+      {/* Backdrop */}
+      <motion.div
+        className="composer-backdrop"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        data-testid="composer-backdrop"
       />
 
-      <div className="composer-bottom">
-        {/* Color picker */}
-        <div className="color-picker" data-testid="color-picker">
-          {COLORS.map(c => (
-            <button
-              key={c.id}
-              className={`color-dot${color === c.value ? ' selected' : ''}`}
-              style={{ backgroundColor: c.value }}
-              onClick={() => setColor(c.value)}
-              title={c.label}
-              data-testid={`color-${c.id}`}
-            />
-          ))}
+      {/* Composer card - centered */}
+      <motion.div
+        className="composer"
+        data-testid="note-composer"
+        initial={{ scale: 0.88, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.88, opacity: 0 }}
+        transition={{ type: 'spring', damping: 22, stiffness: 280 }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header row */}
+        <div className="composer-header">
+          <span className="composer-title">new idea</span>
+          <button className="composer-close-btn" onClick={onClose} data-testid="close-composer-btn">
+            <X size={16} />
+          </button>
         </div>
 
-        {/* Mic button */}
-        {isSupported && (
-          <button
-            className={`mic-btn${isListening ? ' active' : ''}`}
-            onClick={handleMicToggle}
-            data-testid="mic-btn"
-            title={isListening ? 'Stop recording' : 'Speak your idea'}
-          >
-            {isListening ? <MicOff size={17} /> : <Mic size={17} />}
-          </button>
+        {/* Voice indicator */}
+        {isListening && (
+          <div className="voice-indicator" data-testid="voice-indicator">
+            <span className="voice-dot" />
+            <span>Listening… speak your idea</span>
+          </div>
         )}
 
-        {/* Throw button */}
-        <button
-          className="throw-btn"
-          onClick={handleThrow}
-          disabled={!text.trim()}
-          data-testid="throw-btn"
-        >
-          Throw it!
-          <Send size={14} style={{ marginLeft: 5 }} />
-        </button>
+        {/* Text area */}
+        <textarea
+          ref={textareaRef}
+          className="composer-textarea"
+          placeholder={isListening ? 'Say your idea...' : "What's on your mind?"}
+          value={text}
+          onChange={(e) => { setText(e.target.value); if (!isListening) setIsVoiceMode(false); }}
+          onKeyDown={handleKeyDown}
+          autoFocus
+          rows={4}
+          data-testid="composer-textarea"
+        />
 
-        {/* Close */}
-        <button className="composer-close-btn" onClick={onClose} data-testid="close-composer-btn" title="Close">
-          <X size={15} />
-        </button>
-      </div>
-    </motion.div>
+        {/* Bottom row */}
+        <div className="composer-bottom">
+          <div className="color-picker" data-testid="color-picker">
+            {COLORS.map(c => (
+              <button
+                key={c.id}
+                className={`color-dot${color === c.value ? ' selected' : ''}`}
+                style={{ backgroundColor: c.value }}
+                onClick={() => setColor(c.value)}
+                title={c.label}
+                data-testid={`color-${c.id}`}
+              />
+            ))}
+          </div>
+
+          {isSupported && (
+            <button
+              className={`mic-btn${isListening ? ' active' : ''}`}
+              onClick={handleMicToggle}
+              data-testid="mic-btn"
+              title={isListening ? 'Stop' : 'Speak your idea'}
+            >
+              {isListening ? <MicOff size={17} /> : <Mic size={17} />}
+            </button>
+          )}
+
+          <button
+            className="throw-btn"
+            onClick={handleThrow}
+            disabled={!text.trim()}
+            data-testid="throw-btn"
+          >
+            Throw it!
+            <Send size={14} style={{ marginLeft: 5 }} />
+          </button>
+        </div>
+
+        {/* Mode hint */}
+        <p className="composer-hint">
+          {isVoiceMode && !isListening ? 'Voice note — will auto-fly to board' : 'Typed note — grab & fling it on!'}
+        </p>
+      </motion.div>
+    </>
   );
 }

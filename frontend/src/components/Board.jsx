@@ -1,27 +1,31 @@
-import React, { useState, useRef } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Toaster, toast } from 'sonner';
-import { Plus, Trash2 } from 'lucide-react';
+import { AnimatePresence } from 'framer-motion';
+import { Plus, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import { useNotes } from '../hooks/useNotes';
-import StickyNote from './StickyNote';
+import StickerNote from './StickerNote';
+import ExpandedNoteCard from './ExpandedNoteCard';
 import ThrowableNote from './ThrowableNote';
 import NoteComposer from './NoteComposer';
 import Doodles from './Doodles';
+import { STICKER_TYPES } from './StickerCharacters';
 
 function makeNote(text, color, boardRef, isAutoThrow = false) {
   const board = boardRef.current;
   const w = board ? board.offsetWidth : window.innerWidth;
   const h = board ? board.offsetHeight : window.innerHeight;
-  const margin = 110;
-  const noteW = 200;
-  const noteH = 190;
+  const mx = w * 0.2;
+  const my = h * 0.2;
+  const noteSize = 90;
 
   return {
     id: `note-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     text,
     color,
-    x: margin + Math.random() * (w - 2 * margin - noteW),
-    y: margin + Math.random() * (h - 2 * margin - noteH),
-    rotation: (Math.random() - 0.5) * 12,
+    stickerType: STICKER_TYPES[Math.floor(Math.random() * STICKER_TYPES.length)],
+    x: mx + Math.random() * (w - 2 * mx - noteSize),
+    y: my + Math.random() * (h - 2 * my - noteSize),
+    rotation: (Math.random() - 0.5) * 10,
     zIndex: Date.now() % 1000 + 10,
     createdAt: Date.now(),
     autoThrow: isAutoThrow,
@@ -33,17 +37,47 @@ export default function Board() {
   const { notes, addNote, updateNote, deleteNote, bringToFront, clearAll } = useNotes();
   const [composerOpen, setComposerOpen] = useState(false);
   const [pendingNote, setPendingNote] = useState(null);
+  const [expandedId, setExpandedId] = useState(null);
+  const [hiddenId, setHiddenId] = useState(null);   // hides sticker while collapse animation runs
+  const [expandOrigin, setExpandOrigin] = useState(null);
+  const [zoom, setZoom] = useState(1);
+
+  // Scroll-wheel zoom
+  useEffect(() => {
+    const board = boardRef.current;
+    if (!board) return;
+    const handleWheel = (e) => {
+      e.preventDefault();
+      const delta = e.deltaY < 0 ? 0.08 : -0.08;
+      setZoom(prev => Math.max(0.3, Math.min(3, prev + delta)));
+    };
+    board.addEventListener('wheel', handleWheel, { passive: false });
+    return () => board.removeEventListener('wheel', handleWheel);
+  }, []);
+
+  const expandedNote = notes.find(n => n.id === expandedId);
+
+  const handleExpand = useCallback((noteId, rect) => {
+    setExpandOrigin(rect);
+    setExpandedId(noteId);
+  }, []);
+
+  const handleCollapse = useCallback(() => {
+    setHiddenId(expandedId);
+    setExpandedId(null);
+  }, [expandedId]);
+
+  const handleExitComplete = useCallback(() => {
+    setHiddenId(null);
+  }, []);
 
   const handleThrow = (text, color, isVoice) => {
     if (!text.trim()) return;
     const note = makeNote(text, color, boardRef, isVoice);
-
     if (isVoice) {
-      // Auto-throw: note flies onto board automatically
       addNote(note);
       toast('Idea stuck! ✨', { duration: 1800 });
     } else {
-      // Manual throw: show throwable note for user to fling
       setPendingNote(note);
     }
     setComposerOpen(false);
@@ -56,59 +90,93 @@ export default function Board() {
     toast('Stuck! ✨', { duration: 1400 });
   };
 
-  const handleClearAll = () => {
-    if (notes.length === 0) return;
-    clearAll();
-    toast('Board cleared', { duration: 1200 });
-  };
-
   return (
     <div ref={boardRef} className="board" data-testid="board">
-      <Doodles />
 
+      {/* Zoom canvas - all stickers inside */}
+      <div
+        className="board-canvas"
+        style={{ transform: `scale(${zoom})`, transformOrigin: 'center center' }}
+      >
+        <Doodles />
+
+        {notes
+          .filter(n => n.id !== expandedId && n.id !== hiddenId)
+          .map(note => (
+            <StickerNote
+              key={note.id}
+              note={note}
+              boardRef={boardRef}
+              onUpdate={(u) => updateNote(note.id, u)}
+              onDelete={() => { deleteNote(note.id); toast('Poof!', { duration: 1200 }); }}
+              onBringToFront={() => bringToFront(note.id)}
+              onExpand={(rect) => handleExpand(note.id, rect)}
+            />
+          ))}
+      </div>
+
+      {/* Fixed UI — not affected by zoom */}
       {/* App title */}
       <div className="board-title" data-testid="board-title">
         <span>thought</span>
         <span className="title-accent">stick</span>
       </div>
 
-      {/* Note counter + clear */}
+      {/* Note count + clear */}
       {notes.length > 0 && (
         <div className="board-meta" data-testid="board-meta">
           <span className="note-count" data-testid="note-count">
             {notes.length} idea{notes.length !== 1 ? 's' : ''}
           </span>
-          <button className="clear-btn" onClick={handleClearAll} data-testid="clear-all-btn" title="Clear board">
-            <Trash2 size={13} />
+          <button
+            className="clear-btn"
+            onClick={() => { clearAll(); toast('Board cleared', { duration: 1200 }); }}
+            data-testid="clear-all-btn"
+            title="Clear all"
+          >
+            clear all
           </button>
         </div>
       )}
 
+      {/* Zoom controls */}
+      <div className="zoom-controls" data-testid="zoom-controls">
+        <button className="zoom-btn" onClick={() => setZoom(z => Math.min(3, z + 0.2))} data-testid="zoom-in-btn" title="Zoom in">
+          <ZoomIn size={15} />
+        </button>
+        <span className="zoom-level" data-testid="zoom-level">{Math.round(zoom * 100)}%</span>
+        <button className="zoom-btn" onClick={() => setZoom(z => Math.max(0.3, z - 0.2))} data-testid="zoom-out-btn" title="Zoom out">
+          <ZoomOut size={15} />
+        </button>
+        <button className="zoom-btn" onClick={() => setZoom(1)} data-testid="zoom-reset-btn" title="Reset zoom">
+          <RotateCcw size={13} />
+        </button>
+      </div>
+
       {/* Empty state */}
       {notes.length === 0 && !pendingNote && !composerOpen && (
         <div className="empty-state" data-testid="empty-state">
-          <p className="empty-emoji">✦</p>
-          <p className="empty-title">Your board is wide open!</p>
-          <p className="empty-sub">Tap <strong>+</strong> to write or speak your first idea</p>
+          <p className="empty-star">✦</p>
+          <p className="empty-title">Your board is empty!</p>
+          <p className="empty-sub">Tap <strong>+</strong> to write or speak an idea</p>
         </div>
       )}
 
-      {/* Stuck notes on the board */}
-      {notes.map(note => (
-        <StickyNote
-          key={note.id}
-          note={note}
-          boardRef={boardRef}
-          onUpdate={(updates) => updateNote(note.id, updates)}
-          onDelete={() => {
-            deleteNote(note.id);
-            toast('Poof! Gone.', { duration: 1200 });
-          }}
-          onBringToFront={() => bringToFront(note.id)}
-        />
-      ))}
+      {/* Expanded note card */}
+      <AnimatePresence onExitComplete={handleExitComplete}>
+        {expandedId && expandedNote && (
+          <ExpandedNoteCard
+            key={expandedId}
+            note={expandedNote}
+            originRect={expandOrigin}
+            onClose={handleCollapse}
+            onDelete={() => { deleteNote(expandedId); setExpandedId(null); toast('Poof!', { duration: 1200 }); }}
+            onUpdate={(u) => updateNote(expandedId, u)}
+          />
+        )}
+      </AnimatePresence>
 
-      {/* Pending throwable note */}
+      {/* Throwable note (manual throw) */}
       {pendingNote && (
         <ThrowableNote
           note={pendingNote}
@@ -118,16 +186,19 @@ export default function Board() {
         />
       )}
 
-      {/* Composer panel */}
-      {composerOpen && (
-        <NoteComposer
-          onThrow={handleThrow}
-          onClose={() => setComposerOpen(false)}
-        />
-      )}
+      {/* Composer */}
+      <AnimatePresence>
+        {composerOpen && (
+          <NoteComposer
+            key="composer"
+            onThrow={handleThrow}
+            onClose={() => setComposerOpen(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Add button */}
-      {!composerOpen && !pendingNote && (
+      {!composerOpen && !pendingNote && !expandedId && (
         <button
           className="add-btn"
           onClick={() => setComposerOpen(true)}
