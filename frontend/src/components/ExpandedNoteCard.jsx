@@ -33,6 +33,7 @@ export default function ExpandedNoteCard({ note, originRect, onClose, onDelete, 
     const handler = (e) => { if (e.key === 'Escape') handleClose(); };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [text]);
 
   return (
