@@ -58,10 +58,11 @@ export default function NoteComposer({ onThrow, onClose }) {
         data-testid="composer-backdrop"
       />
 
-      {/* Composer card - centered */}
+      {/* Centering wrapper — flex keeps it truly centered on all screens */}
+      <div className="composer-centering-wrapper" data-testid="note-composer">
+      {/* Composer card */}
       <motion.div
         className="composer"
-        data-testid="note-composer"
         initial={{ scale: 0.88, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.88, opacity: 0 }}
