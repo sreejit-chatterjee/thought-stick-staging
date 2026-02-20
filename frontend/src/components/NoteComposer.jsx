@@ -140,6 +140,7 @@ export default function NoteComposer({ onThrow, onClose }) {
           {isVoiceMode && !isListening ? 'Voice note — will auto-fly to board' : 'Typed note — grab & fling it on!'}
         </p>
       </motion.div>
+      </div>
     </>
   );
 }
