@@ -52,7 +52,8 @@ export default function Board() {
   useEffect(() => { panXRef.current = panX; }, [panX]);
   useEffect(() => { panYRef.current = panY; }, [panY]);
 
-  // Convert screen coords (relative to board top-left) to canvas coords
+  // Convert screen coords (relative to board top-left) to canvas coords — no clamping,
+  // stickers can land in extended canvas space revealed when zoomed out.
   const screenToCanvas = useCallback((sx, sy) => {
     const board = boardRef.current;
     if (!board) return { x: sx, y: sy };
@@ -61,11 +62,9 @@ export default function Board() {
     const z = zoomRef.current;
     const px = panXRef.current;
     const py = panYRef.current;
-    const cx = (sx - bw / 2 - px) / z + bw / 2;
-    const cy = (sy - bh / 2 - py) / z + bh / 2;
     return {
-      x: Math.max(0, Math.min(cx, bw - 90)),
-      y: Math.max(60, Math.min(cy, bh - 90)),
+      x: (sx - bw / 2 - px) / z + bw / 2,
+      y: (sy - bh / 2 - py) / z + bh / 2,
     };
   }, []);
 
