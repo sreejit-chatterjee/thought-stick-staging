@@ -73,7 +73,7 @@ async def run_tests():
                 await page.wait_for_selector('[data-testid="color-picker"]', timeout=5000)
                 log("PASS: Color picker found")
 
-                color_dots = await page.query_selector_all('[data-testid^="color-"]')
+                color_dots = await page.query_selector_all('[data-testid="color-butter"], [data-testid="color-grass"], [data-testid="color-mint"], [data-testid="color-sky"]')
                 log(f"PASS: Color dots: {len(color_dots)} (expected 4)")
                 assert len(color_dots) == 4, f"Expected 4 color dots, got {len(color_dots)}"
 
@@ -413,7 +413,7 @@ async def run_tests():
             try:
                 # Update text
                 textarea = await page.query_selector('[data-testid="expanded-textarea"]')
-                await textarea.triple_click()
+                await textarea.click(click_count=3)
                 await page.wait_for_timeout(200)
                 await textarea.fill("Updated idea text")
 
