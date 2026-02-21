@@ -10,7 +10,7 @@ import NoteComposer from './NoteComposer';
 import Doodles from './Doodles';
 import { STICKER_TYPES } from './StickerCharacters';
 
-function makeNote(text, color, boardRef, isAutoThrow = false) {
+function makeNote(text, color, boardRef, isAutoThrow = false, stickerType = null) {
   const board = boardRef.current;
   const w = board ? board.offsetWidth : window.innerWidth;
   const h = board ? board.offsetHeight : window.innerHeight;
@@ -22,7 +22,7 @@ function makeNote(text, color, boardRef, isAutoThrow = false) {
     id: `note-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     text,
     color,
-    stickerType: STICKER_TYPES[Math.floor(Math.random() * STICKER_TYPES.length)],
+    stickerType: stickerType || STICKER_TYPES[Math.floor(Math.random() * STICKER_TYPES.length)],
     x: mx + Math.random() * (w - 2 * mx - noteSize),
     y: my + Math.random() * (h - 2 * my - noteSize),
     rotation: (Math.random() - 0.5) * 10,
