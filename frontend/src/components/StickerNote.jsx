@@ -4,7 +4,7 @@ import { StickerChar } from './StickerCharacters';
 
 const STICKER_SIZE = 90;
 
-export default function StickerNote({ note, boardRef, onUpdate, onDelete, onBringToFront, onExpand }) {
+export default function StickerNote({ note, zoom = 1, boardRef, onUpdate, onDelete, onBringToFront, onExpand }) {
   const stickerRef = useRef(null);
   const motionX = useMotionValue(note.x);
   const motionY = useMotionValue(note.y);
@@ -23,8 +23,12 @@ export default function StickerNote({ note, boardRef, onUpdate, onDelete, onBrin
     const THROW_FACTOR = 0.18;
     const rawX = motionX.get() + info.velocity.x * THROW_FACTOR;
     const rawY = motionY.get() + info.velocity.y * THROW_FACTOR;
-    const finalX = Math.max(0, Math.min(rawX, board.offsetWidth - STICKER_SIZE));
-    const finalY = Math.max(60, Math.min(rawY, board.offsetHeight - STICKER_SIZE));
+
+    // Expand drag bounds when zoomed out so stickers can reach the revealed canvas space
+    const extraX = Math.max(0, (1 / zoom - 1) * board.offsetWidth / 2);
+    const extraY = Math.max(0, (1 / zoom - 1) * board.offsetHeight / 2);
+    const finalX = Math.max(-extraX, Math.min(rawX, board.offsetWidth - STICKER_SIZE + extraX));
+    const finalY = Math.max(60 - extraY, Math.min(rawY, board.offsetHeight - STICKER_SIZE + extraY));
 
     animate(motionX, finalX, { type: 'spring', damping: 22, stiffness: 200, velocity: info.velocity.x * 0.4 });
     animate(motionY, finalY, { type: 'spring', damping: 22, stiffness: 200, velocity: info.velocity.y * 0.4 });
