@@ -646,3 +646,44 @@
 }
 
 .add-btn:active { transform: scale(0.95) rotate(90deg); }
+
+/* ===== COMPOSER PREVIEW ===== */
+.composer-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 14px;
+  padding: 10px 0 6px;
+}
+
+.composer-preview-label {
+  font-family: 'Nunito', sans-serif;
+  font-size: 11px;
+  color: #B0A090;
+  margin: 0;
+}
+
+/* ===== VOICE ERROR ===== */
+.voice-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #c0392b;
+  background: rgba(192, 57, 43, 0.08);
+  border: 1px solid rgba(192, 57, 43, 0.2);
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin-bottom: 10px;
+}
+
+/* ===== EXPANDED COLOR ROW ===== */
+.expanded-color-row {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  margin-bottom: 14px;
+}
