@@ -228,6 +228,7 @@ export default function Board() {
             <StickerNote
               key={note.id}
               note={note}
+              zoom={zoom}
               boardRef={boardRef}
               onUpdate={(u) => updateNote(note.id, u)}
               onDelete={() => { deleteNote(note.id); toast('Poof!', { duration: 1200 }); }}
