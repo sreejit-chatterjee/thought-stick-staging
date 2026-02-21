@@ -1,21 +1,25 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import { motion, useMotionValue, animate } from 'framer-motion';
 import { StickerChar } from './StickerCharacters';
 
-const STICKER_SIZE = 80;
+const STICKER_SIZE = 90;
 
 export default function StickerNote({ note, boardRef, onUpdate, onDelete, onBringToFront, onExpand }) {
   const stickerRef = useRef(null);
   const motionX = useMotionValue(note.x);
   const motionY = useMotionValue(note.y);
   const [dragging, setDragging] = useState(false);
-  const [hovered, setHovered] = useState(false);
+
+  // Stable per-sticker animation delay derived from id (no re-render flicker)
+  const animDelay = useMemo(() => {
+    const hash = note.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+    return (hash % 28) / 10;
+  }, [note.id]);
 
   const handleDragEnd = (_, info) => {
     setDragging(false);
     const board = boardRef.current;
     if (!board) return;
-
     const THROW_FACTOR = 0.18;
     const rawX = motionX.get() + info.velocity.x * THROW_FACTOR;
     const rawY = motionY.get() + info.velocity.y * THROW_FACTOR;
@@ -27,7 +31,7 @@ export default function StickerNote({ note, boardRef, onUpdate, onDelete, onBrin
     setTimeout(() => onUpdate({ x: finalX, y: finalY }), 800);
   };
 
-  const handleClick = (e) => {
+  const handleClick = () => {
     if (dragging) return;
     const rect = stickerRef.current?.getBoundingClientRect();
     onExpand(rect);
@@ -46,35 +50,32 @@ export default function StickerNote({ note, boardRef, onUpdate, onDelete, onBrin
         top: 0,
         zIndex: dragging ? 9999 : note.zIndex,
         width: STICKER_SIZE,
-        height: STICKER_SIZE,
       }}
       drag
       dragMomentum={false}
       onDragStart={() => { setDragging(true); onBringToFront(); }}
       onDragEnd={handleDragEnd}
       onClick={handleClick}
-      onHoverStart={() => setHovered(true)}
-      onHoverEnd={() => setHovered(false)}
-      whileHover={{ scale: 1.12 }}
-      whileDrag={{ scale: 1.1, rotate: 8 }}
+      whileDrag={{ scale: 1.1, rotate: 8, cursor: 'grabbing' }}
+      whileHover={{ scale: 1.13 }}
       initial={note.autoThrow
-        ? { scale: 0, opacity: 0, y: 40 }
+        ? { scale: 0, opacity: 0, y: 60 }
         : { scale: 0.4, opacity: 0 }}
       animate={{ scale: 1, opacity: 1, y: 0 }}
       transition={{ type: 'spring', damping: 12, stiffness: 250 }}
     >
-      <StickerChar type={note.stickerType} color={note.color} size={STICKER_SIZE} />
+      {/* Alive wrapper — CSS animation, separate from framer-motion drag transforms */}
+      <div
+        className={`sticker-alive${dragging ? ' paused' : ''}`}
+        style={{ animationDelay: `${animDelay}s` }}
+      >
+        <StickerChar type={note.stickerType} color={note.color} size={STICKER_SIZE} />
+      </div>
 
-      {/* Small label below sticker on hover */}
-      {hovered && !dragging && (
-        <motion.div
-          className="sticker-label"
-          initial={{ opacity: 0, y: 4 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          tap to read
-        </motion.div>
-      )}
+      {/* Peek label — first few words */}
+      <div className="sticker-peek" style={{ animationDelay: `${animDelay + 0.1}s` }}>
+        {note.text.split(' ').slice(0, 3).join(' ')}{note.text.split(' ').length > 3 ? '…' : ''}
+      </div>
     </motion.div>
   );
 }
