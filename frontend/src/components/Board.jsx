@@ -205,8 +205,9 @@ export default function Board() {
     setComposerOpen(false);
   };
 
-  const handleLand = (x, y) => {
+  const handleLand = (sx, sy) => {
     if (!pendingNote) return;
+    const { x, y } = screenToCanvas(sx, sy);
     addNote({ ...pendingNote, x, y, autoThrow: false });
     setPendingNote(null);
     toast('Stuck! ✨', { duration: 1400 });
