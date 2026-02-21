@@ -271,10 +271,20 @@ export default function Board() {
         <button className="zoom-btn" onClick={() => setZoom(z => Math.max(0.3, z - 0.2))} data-testid="zoom-out-btn" title="Zoom out">
           <ZoomOut size={15} />
         </button>
-        <button className="zoom-btn" onClick={() => { setZoom(1); setPanX(0); setPanY(0); }} data-testid="zoom-reset-btn" title="Reset view">
+        <button className="zoom-btn" onClick={() => { setZoom(1); setPanX(0); setPanY(0); }} data-testid="zoom-reset-btn" title="Reset view (zoom + pan)">
           <RotateCcw size={13} />
         </button>
       </div>
+
+      {/* Pan hint — appears when panned away from origin */}
+      {(Math.abs(panX) > 20 || Math.abs(panY) > 20) && (
+        <div className="pan-hint" data-testid="pan-hint">
+          scroll to pan · reset
+          <button className="pan-hint-reset" onClick={() => { setZoom(1); setPanX(0); setPanY(0); }}>
+            <RotateCcw size={11} />
+          </button>
+        </div>
+      )}
 
       {/* Empty state */}
       {notes.length === 0 && !pendingNote && !composerOpen && (
