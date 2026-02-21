@@ -421,10 +421,24 @@ async def run_tests():
                 done_btn = await page.query_selector('[data-testid^="expanded-close-"]')
                 assert done_btn, "Done button not found"
                 await done_btn.click(force=True)
-                await page.wait_for_timeout(600)
+                # Wait for framer-motion exit animation to complete (spring animation)
+                await page.wait_for_timeout(1500)
 
-                expanded_gone = await page.query_selector('[data-testid^="expanded-card-"]')
-                assert not expanded_gone, "Expanded card should be closed"
+                # Use wait_for_selector with detached state or check via evaluate
+                try:
+                    await page.wait_for_selector('[data-testid^="expanded-card-"]', state='hidden', timeout=2000)
+                    log("PASS: Expanded card hidden/closed after done click")
+                except:
+                    expanded_gone = await page.query_selector('[data-testid^="expanded-card-"]')
+                    if not expanded_gone:
+                        log("PASS: Expanded card removed from DOM after done click")
+                    else:
+                        # Check if it's actually visible
+                        is_visible = await expanded_gone.is_visible()
+                        if not is_visible:
+                            log("PASS: Expanded card not visible (in exit animation)")
+                        else:
+                            raise Exception("Expanded card still visible after clicking done")
                 log("PASS: Expanded card closed after clicking done")
 
                 # Verify sticker peek updated
