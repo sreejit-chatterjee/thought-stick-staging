@@ -219,7 +219,7 @@ export default function Board() {
       {/* Zoom canvas - all stickers inside */}
       <div
         className="board-canvas"
-        style={{ transform: `scale(${zoom})`, transformOrigin: 'center center' }}
+        style={{ transform: `translate(${panX}px, ${panY}px) scale(${zoom})`, transformOrigin: 'center center' }}
       >
         <Doodles />
 
