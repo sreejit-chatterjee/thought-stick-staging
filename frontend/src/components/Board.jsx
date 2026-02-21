@@ -41,18 +41,140 @@ export default function Board() {
   const [hiddenId, setHiddenId] = useState(null);   // hides sticker while collapse animation runs
   const [expandOrigin, setExpandOrigin] = useState(null);
   const [zoom, setZoom] = useState(1);
+  const [panX, setPanX] = useState(0);
+  const [panY, setPanY] = useState(0);
 
-  // Scroll-wheel zoom
+  // Stable refs for coordinate conversion (avoids stale closures)
+  const zoomRef = useRef(1);
+  const panXRef = useRef(0);
+  const panYRef = useRef(0);
+  useEffect(() => { zoomRef.current = zoom; }, [zoom]);
+  useEffect(() => { panXRef.current = panX; }, [panX]);
+  useEffect(() => { panYRef.current = panY; }, [panY]);
+
+  // Convert screen coords (relative to board top-left) to canvas coords
+  const screenToCanvas = useCallback((sx, sy) => {
+    const board = boardRef.current;
+    if (!board) return { x: sx, y: sy };
+    const bw = board.offsetWidth;
+    const bh = board.offsetHeight;
+    const z = zoomRef.current;
+    const px = panXRef.current;
+    const py = panYRef.current;
+    const cx = (sx - bw / 2 - px) / z + bw / 2;
+    const cy = (sy - bh / 2 - py) / z + bh / 2;
+    return {
+      x: Math.max(0, Math.min(cx, bw - 90)),
+      y: Math.max(60, Math.min(cy, bh - 90)),
+    };
+  }, []);
+
+  // Wheel: ctrl/pinch = zoom, plain scroll = pan
   useEffect(() => {
     const board = boardRef.current;
     if (!board) return;
     const handleWheel = (e) => {
       e.preventDefault();
-      const delta = e.deltaY < 0 ? 0.08 : -0.08;
-      setZoom(prev => Math.max(0.3, Math.min(3, prev + delta)));
+      if (e.ctrlKey || e.metaKey) {
+        // Pinch gesture on trackpad, or ctrl+scroll
+        const delta = e.deltaY < 0 ? 0.08 : -0.08;
+        setZoom(prev => Math.max(0.3, Math.min(3, prev + delta)));
+      } else {
+        // Two-finger scroll on trackpad = pan
+        setPanX(prev => prev - e.deltaX);
+        setPanY(prev => prev - e.deltaY);
+      }
     };
     board.addEventListener('wheel', handleWheel, { passive: false });
     return () => board.removeEventListener('wheel', handleWheel);
+  }, []);
+
+  // Middle mouse drag to pan
+  useEffect(() => {
+    const board = boardRef.current;
+    if (!board) return;
+    const panState = { active: false, startX: 0, startY: 0, startPanX: 0, startPanY: 0 };
+
+    const onMouseDown = (e) => {
+      if (e.button !== 1) return;
+      e.preventDefault();
+      panState.active = true;
+      panState.startX = e.clientX;
+      panState.startY = e.clientY;
+      panState.startPanX = panXRef.current;
+      panState.startPanY = panYRef.current;
+      board.style.cursor = 'grabbing';
+    };
+    const onMouseMove = (e) => {
+      if (!panState.active) return;
+      setPanX(panState.startPanX + e.clientX - panState.startX);
+      setPanY(panState.startPanY + e.clientY - panState.startY);
+    };
+    const onMouseUp = (e) => {
+      if (e.button !== 1) return;
+      panState.active = false;
+      board.style.cursor = '';
+    };
+
+    board.addEventListener('mousedown', onMouseDown);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    return () => {
+      board.removeEventListener('mousedown', onMouseDown);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+  }, []);
+
+  // Touch: pinch-to-zoom + two-finger pan
+  useEffect(() => {
+    const board = boardRef.current;
+    if (!board) return;
+    let lastDist = null;
+    let lastCenterX = null;
+    let lastCenterY = null;
+
+    const getTouchDist = (t) => {
+      const dx = t[0].clientX - t[1].clientX;
+      const dy = t[0].clientY - t[1].clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    };
+
+    const onTouchStart = (e) => {
+      if (e.touches.length !== 2) return;
+      lastDist = getTouchDist(e.touches);
+      lastCenterX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      lastCenterY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+    };
+    const onTouchMove = (e) => {
+      if (e.touches.length !== 2 || lastDist === null) return;
+      e.preventDefault();
+      const dist = getTouchDist(e.touches);
+      const scale = dist / lastDist;
+      setZoom(prev => Math.max(0.3, Math.min(3, prev * scale)));
+      lastDist = dist;
+
+      const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const cy = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      if (lastCenterX !== null) {
+        setPanX(prev => prev + cx - lastCenterX);
+        setPanY(prev => prev + cy - lastCenterY);
+      }
+      lastCenterX = cx;
+      lastCenterY = cy;
+    };
+    const onTouchEnd = (e) => {
+      if (e.touches.length < 2) { lastDist = null; lastCenterX = null; lastCenterY = null; }
+    };
+
+    board.addEventListener('touchstart', onTouchStart, { passive: false });
+    board.addEventListener('touchmove', onTouchMove, { passive: false });
+    board.addEventListener('touchend', onTouchEnd);
+    return () => {
+      board.removeEventListener('touchstart', onTouchStart);
+      board.removeEventListener('touchmove', onTouchMove);
+      board.removeEventListener('touchend', onTouchEnd);
+    };
   }, []);
 
   const expandedNote = notes.find(n => n.id === expandedId);
