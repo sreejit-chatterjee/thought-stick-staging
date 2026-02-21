@@ -271,7 +271,7 @@ export default function Board() {
         <button className="zoom-btn" onClick={() => setZoom(z => Math.max(0.3, z - 0.2))} data-testid="zoom-out-btn" title="Zoom out">
           <ZoomOut size={15} />
         </button>
-        <button className="zoom-btn" onClick={() => setZoom(1)} data-testid="zoom-reset-btn" title="Reset zoom">
+        <button className="zoom-btn" onClick={() => { setZoom(1); setPanX(0); setPanY(0); }} data-testid="zoom-reset-btn" title="Reset view">
           <RotateCcw size={13} />
         </button>
       </div>
