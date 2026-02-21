@@ -42,7 +42,7 @@ export default function NoteComposer({ onThrow, onClose }) {
 
   const handleThrow = () => {
     if (!text.trim()) return;
-    onThrow(text.trim(), color, isVoiceMode);
+    onThrow(text.trim(), color, isVoiceMode, previewType);
   };
 
   const handleKeyDown = (e) => {
