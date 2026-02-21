@@ -19,12 +19,14 @@ A cute, tactile ideas workspace where users write or speak ideas onto sticky not
 ---
 
 ## Core Requirements (Static)
-- Sticky notes appear as cute cartoon sticker characters on the board (ghost, kitty, bunny, cloud, star, frog)
+- Sticky notes appear as cute cartoon sticker characters on the board (12 types: ghost, kitty, bunny, cloud, star, frog, bear, mushroom, chick, dino, alien, whale)
 - Throwing mechanic: drag-and-fling a sticker character onto the board (velocity-based landing)
 - Voice input: Web Speech API, voice notes auto-throw to board
 - Tap sticker → expand to full note card with swoosh animation
 - Tap outside expanded card → collapses back to sticker with swoosh
 - Zoom in/out (scroll wheel + buttons, 30%–300%)
+- **Pan the board**: two-finger scroll (trackpad), middle mouse drag
+- **Touch pinch-to-zoom**: two-finger pinch on mobile
 - localStorage persistence (no database)
 - NO gradients, NO Inter font, NO purple
 - Fonts: Caveat (handwriting), Nunito (UI)
@@ -44,17 +46,30 @@ A cute, tactile ideas workspace where users write or speak ideas onto sticky not
 
 ### Feb 2026 — MVP Complete
 - [x] Board canvas with warm cream dot-grid background
-- [x] 6 SVG sticker characters (StickerCharacters.jsx): ghost, kitty, bunny, cloud, star, frog
+- [x] 12 SVG sticker characters (StickerCharacters.jsx): ghost, kitty, bunny, cloud, star, frog, bear, mushroom, chick, dino, alien, whale
 - [x] Stickers assigned randomly per note, colored with note color
 - [x] Drag-and-fling throw mechanic with velocity physics (framer-motion)
 - [x] ThrowableNote: sticker character appears at bottom center, user flings it onto board
+- [x] Throw instructions pill centered at top
+- [x] Cancel button is pill-shaped (not a broken circle)
+- [x] Accidental-delete-on-throw fixed: overlay has no onClick, only cancel button cancels
 - [x] Auto-throw for voice notes: sticker animates to random board position
 - [x] ExpandedNoteCard: tap sticker → card swooshes open from sticker origin rect
 - [x] ExpandedNoteCard: editable text, date, delete, close (swoosh back)
-- [x] NoteComposer: centered floating panel, torn paper aesthetic
-- [x] Color picker: 4 colors (butter/grass/mint/sky)
-- [x] Voice input: mic button, live transcript, auto-throw mode
-- [x] Zoom: scroll wheel + +/−/reset buttons (30%–300%)
+- [x] Color picker in composer with live sticker preview (4 colors)
+- [x] Color picker in expanded note to change color after creation
+- [x] Sticker peek label: first 3 words shown below sticker on board
+- [x] Sticker idle animation: breathe/bob (CSS @keyframes sticker-breathe)
+- [x] Eye-blink animation on sticker pupils
+- [x] NoteComposer: centered floating panel, torn paper aesthetic, sticker preview
+- [x] Voice input: mic button, live transcript, auto-throw mode, error states
+- [x] Voice error CSS: displays with red background when mic permission denied
+- [x] Zoom: scroll wheel/trackpad + +/−/reset buttons (30%–300%)
+- [x] **Board panning**: two-finger trackpad scroll pans (non-ctrl wheel), middle mouse drag pans
+- [x] **Pinch-to-zoom**: two-finger touch for mobile
+- [x] **Pan hint**: subtle UI appears when board is panned, with one-click reset
+- [x] **Reset button resets both zoom AND pan**
+- [x] Coordinate conversion: thrown stickers land correctly at any zoom/pan level
 - [x] localStorage persistence
 - [x] Decorative SVG doodles: stars, squiggles, bows, hearts, paper clips
 - [x] Empty state message
@@ -65,27 +80,24 @@ A cute, tactile ideas workspace where users write or speak ideas onto sticky not
 
 ## Prioritized Backlog
 
-### P0 (Core, done)
-- All above features ✓
-
 ### P1 (Nice to have, next sprint)
-- [ ] Pinch-to-zoom on mobile (touch events)
-- [ ] Pan the board when zoomed in (middle mouse drag or two-finger scroll)
 - [ ] Note search / filter by character type
-- [ ] More sticker character types (5-6 more)
+- [ ] More sticker character types
+- [ ] Idea lifecycle / aging: stickers change appearance based on age (sleeping >7 days, hot = frequently viewed)
 
 ### P2 (Future)
 - [ ] Custom sticker image upload
-- [ ] Board sharing (export as image)
 - [ ] Multi-board support
-- [ ] Sticker animation loops (idle bobbing)
 - [ ] Sound effects on throw/stick
+- [ ] Undo functionality (toast with Undo button after delete)
+- [ ] Mark idea as "Done" (checkmark state, fade out)
 - [ ] Note tagging / categories
+- [ ] Board sharing / export as image
 
 ---
 
 ## Next Tasks
-1. Add pinch-to-zoom for mobile (touch events with two pointer tracking)
-2. Add panning when zoomed in (overflow canvas with drag-to-pan)
-3. More sticker character variety
-4. Optional: idle animation on stickers (gentle float/bob)
+1. Idea lifecycle / aging — stickers change visually based on age (sleeping vs hot)
+2. More sticker character types
+3. Undo after delete (toast with Undo button)
+4. Mark as Done
