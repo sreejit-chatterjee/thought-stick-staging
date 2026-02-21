@@ -192,9 +192,9 @@ export default function Board() {
     setHiddenId(null);
   }, []);
 
-  const handleThrow = (text, color, isVoice) => {
+  const handleThrow = (text, color, isVoice, stickerType) => {
     if (!text.trim()) return;
-    const note = makeNote(text, color, boardRef, isVoice);
+    const note = makeNote(text, color, boardRef, isVoice, stickerType);
     if (isVoice) {
       addNote(note);
       toast('Idea stuck! ✨', { duration: 1800 });
