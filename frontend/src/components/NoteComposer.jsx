@@ -145,7 +145,7 @@ export default function NoteComposer({ onThrow, onClose }) {
               disabled={!text.trim()}
               data-testid="throw-btn"
             >
-              Throw it!
+              let's throw
               <Send size={14} style={{ marginLeft: 5 }} />
             </button>
           </div>
