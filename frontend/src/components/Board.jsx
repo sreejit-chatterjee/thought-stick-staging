@@ -150,7 +150,7 @@ export default function Board() {
       e.preventDefault();
       const dist = getTouchDist(e.touches);
       const scale = dist / lastDist;
-      setZoom(prev => Math.max(0.3, Math.min(3, prev * scale)));
+      setZoom(prev => Math.max(0.05, Math.min(3, prev * scale)));
       lastDist = dist;
 
       const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
