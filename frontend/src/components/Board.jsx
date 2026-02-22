@@ -77,7 +77,7 @@ export default function Board() {
       if (e.ctrlKey || e.metaKey) {
         // Pinch gesture on trackpad, or ctrl+scroll
         const delta = e.deltaY < 0 ? 0.08 : -0.08;
-        setZoom(prev => Math.max(0.3, Math.min(3, prev + delta)));
+        setZoom(prev => Math.max(0.05, Math.min(3, prev + delta)));
       } else {
         // Two-finger scroll on trackpad = pan
         setPanX(prev => prev - e.deltaX);
