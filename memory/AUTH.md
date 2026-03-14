@@ -72,6 +72,8 @@ After a session is available:
 
 `supabase.auth.onAuthStateChange` is subscribed. When a session is observed, `init(session)` may run to complete provisioning. (Implementation note: `useAuth` currently uses a mount-only effect; any state checks inside the callback should be treated carefully to avoid stale closures.)
 
+**StrictMode recovery:** In dev, React mounts → unmounts → remounts. If `getSession().then()` runs after the first unmount, `init()` bails on `!mounted`. A `queueMicrotask()` recovery path calls `init(session, skipMountedCheck=true)` so provisioning completes without the "No API key" race. The listener only runs `init()` when `recoveryNeeded` is set (avoids duplicate init from both getSession and listener).
+
 ---
 
 ## 3. How auth ties to Supabase data (required invariants)

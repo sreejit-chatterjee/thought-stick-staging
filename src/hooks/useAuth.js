@@ -27,17 +27,31 @@ export function useAuth() {
   const [authReady, setAuthReady] = useState(false);
   const initStarted = useRef(false);
   const anonSignInStarted = useRef(false);
+  const recoveryNeeded = useRef(false);
 
   useEffect(() => {
     let mounted = true;
 
-    async function init(session) {
+    async function init(session, skipMountedCheck = false) {
       if (!session) return;
       if (initStarted.current) return;
       initStarted.current = true;
 
-      if (!mounted) {
+      if (!skipMountedCheck && !mounted) {
         initStarted.current = false;
+        recoveryNeeded.current = true;
+        // #region agent log
+        fetch('http://127.0.0.1:7284/ingest/0e34918c-4fc4-46d2-a0ef-47d73b8f7ead',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'ab2f05'},body:JSON.stringify({sessionId:'ab2f05',location:'useAuth.js:bail',message:'init bailed on !mounted, queueing recovery',data:{mounted,skipMountedCheck},timestamp:Date.now(),hypothesisId:'H2'})}).catch(()=>{});
+        // #endregion
+        // Listener may fire before this bail; defer so recovery runs after.
+        const s = session;
+        queueMicrotask(() => {
+          if (recoveryNeeded.current && !initStarted.current) {
+            recoveryNeeded.current = false;
+            fetch('http://127.0.0.1:7284/ingest/0e34918c-4fc4-46d2-a0ef-47d73b8f7ead',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'ab2f05'},body:JSON.stringify({sessionId:'ab2f05',location:'useAuth.js:recovery',message:'recovery init(s,true) called',data:{},timestamp:Date.now(),hypothesisId:'H2b'})}).catch(()=>{});
+            init(s, true);
+          }
+        });
         return;
       }
 
@@ -60,7 +74,7 @@ export function useAuth() {
       }
 
       const uid = session.user.id;
-      if (!mounted) return;
+      if (!skipMountedCheck && !mounted) return;
       setUserId(uid);
 
       const { data: boards, error } = await supabase
@@ -93,7 +107,7 @@ export function useAuth() {
         bid = newBoard.id;
       }
 
-      if (!mounted) return;
+      if (!skipMountedCheck && !mounted) return;
       setBoardId(bid);
       setAuthReady(true);
     }
@@ -115,9 +129,12 @@ export function useAuth() {
       }
     });
 
-    // INITIAL_SESSION is handled by getSession() above; skip it to avoid double init().
+    // Only use listener for StrictMode recovery: when init() bailed on !mounted, we set
+    // recoveryNeeded. The listener completes init when SIGNED_IN fires. This avoids the
+    // "No API key" race that happens when both getSession/.then and the listener call init.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session && event !== 'INITIAL_SESSION' && !initStarted.current) {
+      if (session && event === 'SIGNED_IN' && recoveryNeeded.current && !initStarted.current) {
+        recoveryNeeded.current = false;
         init(session);
       }
     });
