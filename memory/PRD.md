@@ -193,9 +193,11 @@ Tap the photo area → two options:
 
 ### Stack
 - **Frontend:** React, framer-motion, Tailwind CSS
-- **Backend:** FastAPI (existing, minimal) + **Supabase** (new for V2+)
-- **Storage:** Supabase Storage (photos) + Supabase PostgreSQL (board data)
+- **Backend:** None — React talks directly to Supabase (anon key + RLS)
+- **Database:** Supabase PostgreSQL (board data)
+- **Storage:** Supabase Storage (photos, private bucket `entry-images`)
 - **Auth:** Supabase anonymous auth (V1) → upgradeable to email (V1 nudge flow)
+- **Planned server-side:** Supabase Edge Function for account deletion (requires `service_role`)
 
 ### V1 Auth Flow — Anonymous First
 
