@@ -40,15 +40,11 @@ export function useAuth() {
       if (!skipMountedCheck && !mounted) {
         initStarted.current = false;
         recoveryNeeded.current = true;
-        // #region agent log
-        fetch('http://127.0.0.1:7284/ingest/0e34918c-4fc4-46d2-a0ef-47d73b8f7ead',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'ab2f05'},body:JSON.stringify({sessionId:'ab2f05',location:'useAuth.js:bail',message:'init bailed on !mounted, queueing recovery',data:{mounted,skipMountedCheck},timestamp:Date.now(),hypothesisId:'H2'})}).catch(()=>{});
-        // #endregion
         // Listener may fire before this bail; defer so recovery runs after.
         const s = session;
         queueMicrotask(() => {
           if (recoveryNeeded.current && !initStarted.current) {
             recoveryNeeded.current = false;
-            fetch('http://127.0.0.1:7284/ingest/0e34918c-4fc4-46d2-a0ef-47d73b8f7ead',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'ab2f05'},body:JSON.stringify({sessionId:'ab2f05',location:'useAuth.js:recovery',message:'recovery init(s,true) called',data:{},timestamp:Date.now(),hypothesisId:'H2b'})}).catch(()=>{});
             init(s, true);
           }
         });
